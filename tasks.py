@@ -17,10 +17,10 @@ except ImportError:
 # Configuration
 #===============================================================================
 # The name used by PyPi and Conda
-NAME = 'NAME'
+NAME = 'fema-p695'
 
 # The actual importable package name
-PACKAGE = 'PACKAGE'
+PACKAGE = 'fema_p695'
 
 # Conda options
 CONDABUILD = 'mambabuild'

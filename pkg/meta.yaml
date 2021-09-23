@@ -17,12 +17,12 @@ requirements:
     - pip
   run:
     - python
-    # Other runtime dependencies
+    - numpy
+    - scipy
 
 test:
   imports:
-    - PACKAGE
-    - PACKAGE.SUBPACKAGE
+    - fema_p695
   requires:
     - pytest
   source_files:
