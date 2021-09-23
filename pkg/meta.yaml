@@ -17,18 +17,13 @@ requirements:
     - pip
   run:
     - python
+    - otaithleigh::asce7-16
     - numpy
     - scipy
 
 test:
   imports:
     - fema_p695
-  requires:
-    - pytest
-  source_files:
-    - test
-  commands:
-    - pytest
 
 about:
   home: {{ data.get('url') }}
