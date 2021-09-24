@@ -176,8 +176,7 @@ def sf1(T, sdc):
     if T <= _T_INTERP[0] or T >= _T_INTERP[-1]:
         raise ValueError(f"Period is out of range: T = {T}")
 
-    f = interp1d(_T_INTERP, _SNRT_INTERP)
-    SNRT = f(T)
+    SNRT = np.interp(T, _T_INTERP, _SNRT_INTERP)
     SMT = smt(T, sdc)
 
     return SMT / SNRT
