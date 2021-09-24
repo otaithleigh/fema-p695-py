@@ -7,7 +7,6 @@ import asce7_16
 import numpy as np
 from scipy.stats import lognorm
 from scipy.optimize import fsolve
-from scipy.interpolate import interp1d, interp2d
 
 __version__ = importlib.resources.read_text(__name__, '__version__')
 
@@ -204,88 +203,103 @@ def smt(T, sdc):
 #-------------------------------------------
 # Spectral shape factor stuff
 #-------------------------------------------
-_Z_SSF_DICT = {
-    "Dmax":
-    np.array([
-        [1.00, 1.05, 1.10, 1.13, 1.18, 1.22, 1.28, 1.33],
-        [1.00, 1.05, 1.11, 1.14, 1.20, 1.24, 1.30, 1.36],
-        [1.00, 1.06, 1.11, 1.15, 1.21, 1.25, 1.32, 1.38],
-        [1.00, 1.06, 1.12, 1.16, 1.22, 1.27, 1.35, 1.41],
-        [1.00, 1.06, 1.13, 1.17, 1.24, 1.29, 1.37, 1.44],
-        [1.00, 1.07, 1.13, 1.18, 1.25, 1.31, 1.39, 1.46],
-        [1.00, 1.07, 1.14, 1.19, 1.27, 1.32, 1.41, 1.49],
-        [1.00, 1.07, 1.15, 1.20, 1.28, 1.34, 1.44, 1.52],
-        [1.00, 1.08, 1.16, 1.21, 1.29, 1.36, 1.46, 1.55],
-        [1.00, 1.08, 1.16, 1.22, 1.31, 1.38, 1.49, 1.58],
-        [1.00, 1.08, 1.17, 1.23, 1.32, 1.40, 1.51, 1.61],
-    ]),
-    "Dmin":
-    np.array([
-        [1.00, 1.02, 1.04, 1.06, 1.08, 1.09, 1.12, 1.14],
-        [1.00, 1.02, 1.05, 1.07, 1.09, 1.11, 1.13, 1.16],
-        [1.00, 1.03, 1.06, 1.08, 1.10, 1.12, 1.15, 1.18],
-        [1.00, 1.03, 1.06, 1.08, 1.11, 1.14, 1.17, 1.20],
-        [1.00, 1.03, 1.07, 1.09, 1.13, 1.15, 1.19, 1.22],
-        [1.00, 1.04, 1.08, 1.10, 1.14, 1.17, 1.21, 1.25],
-        [1.00, 1.04, 1.08, 1.11, 1.15, 1.18, 1.23, 1.27],
-        [1.00, 1.04, 1.09, 1.12, 1.17, 1.20, 1.25, 1.30],
-        [1.00, 1.05, 1.10, 1.13, 1.18, 1.22, 1.27, 1.32],
-        [1.00, 1.05, 1.10, 1.14, 1.19, 1.23, 1.30, 1.35],
-        [1.00, 1.05, 1.11, 1.15, 1.21, 1.25, 1.32, 1.37],
-    ])
+# Figure B-3 | Equation B-1
+def _ε_records_farfield(T) -> np.ndarray:
+    T = np.asarray(T)
+    return np.piecewise(
+        T,
+        [
+            T < 0.5,
+            (0.5 <= T) & (T < 1.5),
+        ],
+        [
+            0.6,
+            lambda T: 0.6 * (1.5 - T),
+            0.0,
+        ],
+    )
+
+
+# Figure B-9 | Equation B-6
+def _ε_records_nearfield(T) -> np.ndarray:
+    T = np.asarray(T)
+    return np.piecewise(
+        T,
+        [
+            T < 1.5,
+            (1.5 <= T) & (T < 2.5),
+        ],
+        [
+            0.0,
+            lambda T: 0.2 * (T - 1.5),
+            0.2,
+        ],
+    )
+
+
+_ε_records_dispatch = {
+    'farfield': _ε_records_farfield,
+    'nearfield': _ε_records_nearfield,
+    'nearfield_pulse': _ε_records_nearfield,
+    'nearfield_no_pulse': _ε_records_nearfield,
 }
-_Z_SSF_DICT["Cmax"] = _Z_SSF_DICT["Dmin"]
-_Z_SSF_DICT["Cmin"] = _Z_SSF_DICT["Dmin"]
-_Z_SSF_DICT["Bmax"] = _Z_SSF_DICT["Dmin"]
-_Z_SSF_DICT["Bmin"] = _Z_SSF_DICT["Dmin"]
-
-_X_MU_T = [1.0, 1.1, 1.5, 2, 3, 4, 6, 8]
-_Y_T = [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
 
 
-def ssf(T, mu_t, sdc):
+def _get_ε_records(record_set):
+    try:
+        ε_records = _ε_records_dispatch[record_set]
+    except KeyError as exc:
+        record_sets = set(_ε_records_dispatch.keys())
+        raise ValueError(f'record_set {record_set!r} '
+                         f'not in {record_sets!r}') from exc
+
+    return ε_records
+
+
+def ssf(T, μT, sdc, record_set: str = 'farfield'):
     """Compute the spectral shape factor (SSF).
 
     Parameters
     ----------
-    T:
-        Period of the structure
-    mu_t:
-        Period-based ductility
-    sdc:
-        Seismic design category
+    T : float | array_like
+        Fundamental period of the structure [sec].
+    μT : float | array_like
+        Period-based ductility [unitless]. See Equation 6-6.
+    sdc : {'dmax', 'dmin', 'cmax', 'cmin', 'bmax', 'bmin'}
+        Seismic design category (case-insensitive)
+    record_set : {'farfield', 'nearfield'}
+        Ground motion set (default: 'farfield')
 
-    Ref: FEMA P695 Section
+    Ref: FEMA P695 Appendix B
     """
-    try:
-        Z_SSF = _Z_SSF_DICT[sdc]
-    except KeyError:
-        raise ValueError(f"Unknown seismic design category: {sdc}")
+    μT = np.asarray(μT)
+    if np.any(μT < 1.0):
+        raise ValueError('μT must be >= 1.0')
 
-    if mu_t < 1:
-        raise ValueError("mu_t must be greater than or equal to 1")
+    # Equation B-3
+    β1: np.ndarray = np.piecewise(
+        μT,
+        [μT <= 8.0],
+        [
+            lambda μT: 0.14 * (μT - 1)**0.42,
+            0.32,
+        ],
+    )
 
-    if T <= 0.5:
-        if mu_t >= 8:
-            ssf = Z_SSF[0, -1]
-        else:
-            f = interp1d(_X_MU_T, Z_SSF[0, :])
-            ssf = f(mu_t)[0]
-    elif T >= 1.5:
-        if mu_t >= 8:
-            ssf = Z_SSF[-1, -1]
-        else:
-            f = interp1d(_X_MU_T, Z_SSF[-1, :])
-            ssf = f(mu_t)[0]
-    else:
-        if mu_t >= 8:
-            f = interp1d(_Y_T, Z_SSF[:, -1])
-            ssf = f(mu_t)[0]
-        else:
-            f = interp2d(_X_MU_T, _Y_T, Z_SSF)
-            ssf = f(mu_t, T)[0]
+    # Section B.3.2
+    εo = {
+        'bmin': 1.0,
+        'bmax': 1.0,
+        'cmin': 1.0,
+        'cmax': 1.0,
+        'dmin': 1.5,
+        'dmax': 1.5,
+    }[sdc.lower()]
 
-    return ssf
+    ε_records = _get_ε_records(record_set)
+
+    # Equation B-4
+    return np.exp(β1 * (εo - ε_records(T)))
 
 
 def fundamental_period(hn, Ct, x, sdc):
