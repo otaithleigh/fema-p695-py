@@ -18,12 +18,18 @@ requirements:
   run:
     - python
     - otaithleigh::asce7-16
+    - h5py
+    - hdf5plugin
     - numpy
+    - pandas
     - scipy
+    - xarray
+    - otaithleigh::xarray-hdf
 
 test:
   imports:
     - fema_p695
+    - fema_p695.groundmotions
 
 about:
   home: {{ data.get('url') }}
