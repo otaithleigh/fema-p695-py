@@ -30,6 +30,12 @@ test:
   imports:
     - fema_p695
     - fema_p695.groundmotions
+  requires:
+    - pytest
+  source_files:
+    - test
+  commands:
+    - pytest
 
 about:
   home: {{ data.get('url') }}
