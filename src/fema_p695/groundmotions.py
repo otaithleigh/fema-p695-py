@@ -25,6 +25,8 @@ __all__ = [
     'GroundMotionData',
     'load_ground_motions',
     'get_ground_motion',
+    'get_metadata',
+    'get_response_spectrum',
 ]
 
 
