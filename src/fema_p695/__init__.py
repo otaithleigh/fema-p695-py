@@ -19,6 +19,7 @@ __all__ = [
     'seismic_response_coeff',
     'sf1',
     'smt',
+    'snrt',
     'ssf',
 ]
 
