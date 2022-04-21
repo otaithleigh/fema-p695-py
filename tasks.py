@@ -24,7 +24,7 @@ PACKAGE = 'fema_p695'
 
 # Conda options
 CONDABUILD = 'mambabuild'
-CHANNELS = ['conda-forge', 'defaults']
+CHANNELS = ['conda-forge', 'defaults', 'otaithleigh']
 
 # Whether to echo commands
 ECHO = True
