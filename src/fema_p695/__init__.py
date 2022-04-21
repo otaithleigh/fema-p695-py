@@ -141,8 +141,10 @@ def mapped_value(value: str, sdc: str):
 
     Parameters
     ----------
-    value:
-        Mapped parameter to retrieve (SS, S1, Fa, Fv, SMS, SM1, SDS, SD1, Ts)
+    value : {'SS', 'S1', 'Fa', 'Fv', 'SMS', 'SM1', 'SDS', 'SD1', 'Ts'}
+        Mapped parameter to retrieve 
+    sdc : {'dmax', 'dmin', 'cmax', 'cmin', 'bmax', 'bmin'}
+        Seismic design category
     """
     return _mapped_value_dict[sdc.lower()][value.lower()]
 
@@ -161,16 +163,17 @@ _SNRT_INTERP = [
 def sf1(T, sdc):
     """Calculate scale factor 1, which scales ground motions to the MCE.
 
+    FEMA P695 calls this the "scaling factor for anchoring record set to MCE
+    spectral demand" and doesn't provide a symbol for it; here we use SF1.
+
     Parameters
     ----------
     T : float
-        Period of the structure
-
-    sdc : str
+        Period of the structure [seconds]
+    sdc : {'dmax', 'dmin', 'cmax', 'cmin', 'bmax', 'bmin'}
         Seismic design category
 
-
-    Ref: FEMA P695 Section
+    Ref: FEMA P695 Section A.8, Paragraph "Scaling of Record Sets"
     """
     if T <= _T_INTERP[0] or T >= _T_INTERP[-1]:
         raise ValueError(f"Period is out of range: T = {T}")
@@ -182,14 +185,13 @@ def sf1(T, sdc):
 
 
 def smt(T, sdc):
-    """Calculate the SMT.
+    """Calculate the MCE demand, SMT.
 
     Parameters
     ----------
     T : float
-        Fundamental period of the structure (seconds)
-
-    sdc : str
+        Fundamental period of the structure [seconds]
+    sdc : {'dmax', 'dmin', 'cmax', 'cmin', 'bmax', 'bmin'}
         Seismic design category
     """
     SM1 = mapped_value("SM1", sdc)
@@ -261,9 +263,9 @@ def ssf(T, μT, sdc, record_set: str = 'farfield'):
 
     Parameters
     ----------
-    T : float | array_like
-        Fundamental period of the structure [sec].
-    μT : float | array_like
+    T : float, array_like
+        Fundamental period of the structure [seconds].
+    μT : float, array_like
         Period-based ductility [unitless]. See Equation 6-6.
     sdc : {'dmax', 'dmin', 'cmax', 'cmin', 'bmax', 'bmin'}
         Seismic design category (case-insensitive)
@@ -316,14 +318,11 @@ def fundamental_period(hn, Ct, x, sdc):
     ----------
     hn : float
         Height of the structure (ft)
-
     Ct : float
         Building period coefficient.
-
     x : float
         Exponent on building height.
-
-    sdc : str
+    sdc : {'dmax', 'dmin', 'cmax', 'cmin', 'bmax', 'bmin'}
         Seismic design category.
 
     Returns
@@ -345,18 +344,15 @@ def seismic_response_coeff(R, T, sdc, level: str = 'design'):
     ----------
     R : float
         Response modification factor.
-
     T : float
         Fundamental period (s).
-
-    sdc : str
+    sdc : {'dmax', 'dmin', 'cmax', 'cmin', 'bmax', 'bmin'}
         Seismic design category (Dmax, Dmin, etc.).
-
     level : {'design', 'mce'}, optional
         Hazard level to get the response coefficient for. (default: 'design')
 
     Note that this function follows the assumptions and restrictions enforced by
-    FEMA P695; namely, it is used only with mapped values from the
+    FEMA P695; namely, it is used only with mapped hazard values from the
     ``mapped_values`` function, and for structures with periods of 4.0 s or
     lower. For a more general function, see ``asce7_16.seismic_response_coeff``.
     """
@@ -394,7 +390,6 @@ def design_response_spectrum(sdc, tl=4.0):
     ----------
     sdc : {'Dmax', 'Dmin', 'Cmax', 'Cmin', 'Bmax', 'Bmin'}
         Seismic design category.
-
     tl : float, optional
         Transition period between constant velocity and constant displacement
         response domains. Note that FEMA P695 does not include values for T_L
@@ -415,7 +410,6 @@ def mce_response_spectrum(sdc, tl=4.0):
     ----------
     sdc : {'Dmax', 'Dmin', 'Cmax', 'Cmin', 'Bmax', 'Bmin'}
         Seismic design category.
-
     tl : float, optional
         Transition period between constant velocity and constant displacement
         response domains. Note that FEMA P695 does not include values for T_L
