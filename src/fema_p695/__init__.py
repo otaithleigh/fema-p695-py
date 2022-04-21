@@ -149,19 +149,54 @@ def mapped_value(value: str, sdc: str):
     return _mapped_value_dict[sdc.lower()][value.lower()]
 
 
-_T_INTERP = [
+# Table A-3
+_T_INTERP = np.array([
     0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6,
     1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.5, 4.0, 4.5, 5.0
-]
-_SNRT_INTERP = [
-    0.785, 0.781, 0.767, 0.754, 0.755, 0.742, 0.607, 0.541, 0.453, 0.402, 0.350,
-    0.303, 0.258, 0.210, 0.169, 0.149, 0.134, 0.119, 0.106, 0.092, 0.081, 0.063,
-    0.053, 0.046, 0.041
-]
+])
+_SNRT_INTERP = {
+    'farfield':
+    np.array([
+        0.779, 0.775, 0.761, 0.748, 0.749, 0.736, 0.602, 0.537, 0.449, 0.399,
+        0.348, 0.301, 0.256, 0.208, 0.168, 0.148, 0.133, 0.118, 0.106, 0.091,
+        0.080, 0.063, 0.052, 0.046, 0.041
+    ]),
+    'nearfield':
+    np.array([
+        0.936, 1.020, 0.939, 0.901, 0.886, 0.855, 0.833, 0.805, 0.739, 0.633,
+        0.571, 0.476, 0.404, 0.356, 0.319, 0.284, 0.258, 0.230, 0.210, 0.190,
+        0.172, 0.132, 0.104, 0.086, 0.072
+    ])
+}
 
 
-def sf1(T, sdc):
-    """Calculate scale factor 1, which scales ground motions to the MCE.
+def snrt(T, record_set: str = 'farfield'):
+    """Retrieve the median 5%-damped spectral pseudo-acceleration of the
+    normalized record set, SNRT, at a given period T.
+
+    Parameters
+    ----------
+    T : float
+        Period of the structure [seconds]
+    record_set : {'farfield', 'nearfield'}
+        Ground motion set (default: 'farfield')
+    """
+    if T <= _T_INTERP[0] or T >= _T_INTERP[-1]:
+        raise ValueError(f"Period is out of range: T = {T}")
+
+    try:
+        snrt_interp = _SNRT_INTERP[record_set]
+    except KeyError as exc:
+        valid_sets = set(_SNRT_INTERP.keys())
+        raise ValueError(f'Unrecognized record set {record_set!r}; '
+                         f'must be one of {valid_sets!r}') from exc
+    
+    return np.interp(T, _T_INTERP, snrt_interp)
+
+
+def sf1(T, sdc, record_set: str = 'farfield'):
+    """Calculate scale factor 1, which scales normalized ground motions to the
+    MCE spectral demand.
 
     FEMA P695 calls this the "scaling factor for anchoring record set to MCE
     spectral demand" and doesn't provide a symbol for it; here we use SF1.
@@ -172,13 +207,12 @@ def sf1(T, sdc):
         Period of the structure [seconds]
     sdc : {'dmax', 'dmin', 'cmax', 'cmin', 'bmax', 'bmin'}
         Seismic design category
+    record_set : {'farfield', 'nearfield'}
+        Ground motion set (default: 'farfield')
 
     Ref: FEMA P695 Section A.8, Paragraph "Scaling of Record Sets"
     """
-    if T <= _T_INTERP[0] or T >= _T_INTERP[-1]:
-        raise ValueError(f"Period is out of range: T = {T}")
-
-    SNRT = np.interp(T, _T_INTERP, _SNRT_INTERP)
+    SNRT = snrt(T, record_set)
     SMT = smt(T, sdc)
 
     return SMT / SNRT
