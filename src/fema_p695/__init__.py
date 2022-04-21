@@ -23,6 +23,9 @@ __all__ = [
 ]
 
 
+#------------------------------------------------------------------------
+# Collapse margin ratio
+#------------------------------------------------------------------------
 def acmrxx(beta_total, collapse_prob, xin=0.622):
     """Compute the acceptable value of the adjusted collapse margin ratio (ACMR).
 
@@ -85,6 +88,9 @@ def beta_total(rating_DR: str,
     return round(beta * 40) / 40
 
 
+#------------------------------------------------------------------------
+# Mapped hazards
+#------------------------------------------------------------------------
 _mapped_value_dict = {
     "dmax": {
         "ss": 1.5,
@@ -149,6 +155,9 @@ def mapped_value(value: str, sdc: str):
     return _mapped_value_dict[sdc.lower()][value.lower()]
 
 
+#------------------------------------------------------------------------
+# Ground motion scaling
+#------------------------------------------------------------------------
 # Table A-3
 _T_INTERP = np.array([
     0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6,
@@ -236,9 +245,9 @@ def smt(T, sdc):
         return SM1 / T
 
 
-#-------------------------------------------
-# Spectral shape factor stuff
-#-------------------------------------------
+#------------------------------------------------------------------------
+# Spectral shape factor
+#------------------------------------------------------------------------
 # Figure B-3 | Equation B-1
 def _ε_records_farfield(T) -> np.ndarray:
     T = np.asarray(T)
@@ -338,6 +347,9 @@ def ssf(T, μT, sdc, record_set: str = 'farfield'):
     return np.exp(β1 * (εo - ε_records(T)))
 
 
+#------------------------------------------------------------------------
+# Structure parameters
+#------------------------------------------------------------------------
 def fundamental_period(hn, Ct, x, sdc):
     """Calculate the fundamental period of the structure.
 
