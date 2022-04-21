@@ -65,7 +65,7 @@ def beta_total(rating_DR: str,
                rating_TD: str,
                rating_MDL: str,
                mu_T: float = 3.0) -> float:
-    """Compute the total uncertainty present in th system.
+    """Compute the total uncertainty present in the system.
 
     Parameters
     ----------
@@ -200,7 +200,7 @@ def snrt(T, record_set: str = 'farfield'):
         valid_sets = set(_SNRT_INTERP.keys())
         raise ValueError(f'Unrecognized record set {record_set!r}; '
                          f'must be one of {valid_sets!r}') from exc
-    
+
     return np.interp(T, _T_INTERP, snrt_interp)
 
 
