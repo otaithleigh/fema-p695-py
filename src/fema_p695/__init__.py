@@ -332,13 +332,18 @@ def ssf(T, μT, sdc, record_set: str = 'farfield'):
         ],
     )
 
-    # Section B.3.2
+    # Target epsilon -- Section B.3.2
+    #
+    # The text of Appendix B states that εo = 1.5 for "SDC D", with no mention
+    # of Dmax vs. Dmin. But the tabulated SSF in both Ch. 7 and App. B show the
+    # SSF for Dmin as being the same as SDC B and C, which corresponds to an
+    # εo of 1.0.
     εo = {
         'bmin': 1.0,
         'bmax': 1.0,
         'cmin': 1.0,
         'cmax': 1.0,
-        'dmin': 1.5,
+        'dmin': 1.0,
         'dmax': 1.5,
     }[sdc.lower()]
 
