@@ -121,7 +121,7 @@ def _from_hdf5(filename) -> t.Tuple[pd.DataFrame, pd.DataFrame, xr.Dataset]:
         columns=['Time', 'RecordedAcceleration', 'NormalizedAcceleration'],
         index=groundmotions.index,
     )
-    with h5py.File(filename) as h5:
+    with h5py.File(filename, 'r') as h5:
         for recID, compID in groundmotions.index:
             group = h5['_timeseries'][str(recID)][compID]
             timeseries.loc[(recID, compID), 'Time'] = group['Time'][()]
