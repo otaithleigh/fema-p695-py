@@ -38,6 +38,7 @@ with Path('src', PACKAGE, '__version__').open() as f:
 PYPI_NAME = NAME.replace('-', '_')
 BUILD_DIR = Path('build')
 DIST_DIR = Path('dist')
+PYPI_DIST_DIR = DIST_DIR / 'pypi' / VERSION
 
 
 #===============================================================================
@@ -64,10 +65,10 @@ def build_pypi(c):
     run(['git', 'clone', '.', pypi_build_dir])
     run(['python', 'setup.py', 'sdist', 'bdist_wheel'], cwd=pypi_build_dir)
 
-    squawk('Moving build artifacts to', DIST_DIR)
-    DIST_DIR.mkdir(parents=True, exist_ok=True)
+    squawk('Moving build artifacts to', PYPI_DIST_DIR)
+    PYPI_DIST_DIR.mkdir(parents=True, exist_ok=True)
     for file in (pypi_build_dir / 'dist').glob('*'):
-        new_path = DIST_DIR / file.name
+        new_path = PYPI_DIST_DIR / file.name
         print(file, '->', new_path)
         file.rename(new_path)
 
@@ -93,7 +94,7 @@ def build(c):
 @task
 def upload_pypi(c):
     """Upload PyPi package."""
-    files = DIST_DIR.glob(f'{PYPI_NAME}-{VERSION}*')
+    files = PYPI_DIST_DIR.glob('*')
     run(['twine', 'upload', *files])
 
 
