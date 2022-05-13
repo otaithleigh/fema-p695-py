@@ -187,11 +187,11 @@ def snrt(T, record_set: str = 'farfield'):
     Parameters
     ----------
     T : float
-        Period of the structure [seconds]
+        Period of the structure [seconds]. Must be in the range [0.25, 5.0].
     record_set : {'farfield', 'nearfield'}
         Ground motion set (default: 'farfield')
     """
-    if T <= _T_INTERP[0] or T >= _T_INTERP[-1]:
+    if T < _T_INTERP[0] or T > _T_INTERP[-1]:
         raise ValueError(f"Period is out of range: T = {T}")
 
     try:
