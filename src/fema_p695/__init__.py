@@ -181,7 +181,7 @@ _SNRT_INTERP = {
 
 
 def snrt(T, record_set: str = 'farfield'):
-    """Retrieve the median 5%-damped spectral pseudo-acceleration of the
+    """Retrieve the geometric mean 5%-damped spectral pseudo-acceleration of the
     normalized record set, SNRT, at a given period T.
 
     Parameters
