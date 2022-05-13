@@ -409,8 +409,10 @@ def seismic_response_coeff(R, T, sdc, level: str = 'design'):
     lower. For a more general function, see ``asce7_16.seismic_response_coeff``.
     """
     if T > 4.0:
-        warnings.warn('seismic_response_coeff: Given period '
-                      f'(T = {T} s) is out of FEMA P695 range')
+        warnings.warn(
+            'seismic_response_coeff: Given period '
+            f'(T = {T} s) is out of FEMA P695 range',
+            stacklevel=2)
 
     Ts = mapped_value('Ts', sdc)
 
