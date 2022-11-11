@@ -69,8 +69,10 @@ def acmrxx(beta_total: ArrayLike,
 
     Ref: FEMA P695 Section 7.4
     """
-    beta_total = np.asarray(beta_total)
-    collapse_prob = np.asarray(collapse_prob)
+    if not np.isscalar(beta_total):
+        beta_total = np.asarray(beta_total)
+    if not np.isscalar(collapse_prob):
+        collapse_prob = np.asarray(collapse_prob)
 
     # Original MATLAB code uses 1/logninv to calculate ACMR. SciPy
     # doesn't have a logninv function, but we can reimplement it
@@ -91,10 +93,7 @@ def acmrxx(beta_total: ArrayLike,
     #              = exp(√2 * β * erfcinv(2*p))
     #
     # ref: https://www.mathworks.com/help/stats/logninv.html
-
-    acmr = np.exp(math.sqrt(2) * beta_total * erfcinv(2 * collapse_prob))
-    # Return an actual scalar if scalar
-    return acmr[()] if acmr.shape == () else acmr
+    return np.exp(math.sqrt(2) * beta_total * erfcinv(2 * collapse_prob))
 
 
 # Uncertainty values for each rating
@@ -194,7 +193,7 @@ def mapped_value(value: str, sdc: str):
     Parameters
     ----------
     value : {'SS', 'S1', 'Fa', 'Fv', 'SMS', 'SM1', 'SDS', 'SD1', 'Ts'}
-        Mapped parameter to retrieve 
+        Mapped parameter to retrieve
     sdc : {'dmax', 'dmin', 'cmax', 'cmin', 'bmax', 'bmin'}
         Seismic design category
     """
