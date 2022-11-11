@@ -34,6 +34,14 @@ Changelog
   specifying mode 'r'
 
 
+[0.2.0.1] - 2022-04-21
+----------------------
+
+### Fixed
+
+- Add a barebones README to the package.
+
+
 [0.2.0] - 2022-04-21
 --------------------
 
