@@ -74,16 +74,25 @@ def acmrxx(beta_total: ArrayLike,
 
     # Original MATLAB code uses 1/logninv to calculate ACMR. SciPy
     # doesn't have a logninv function, but we can reimplement it
-    # using erfcinv.
+    # using erfcinv. logninv is defined by the following two functions:
+    #
+    #   logninv(p, 0, 1) = exp(-√2 * erfcinv(2*p))
+    #   logninv(p, μ, σ) = exp(μ + σ * log(logninv(p, 0, 1)))
+    #
+    # ACMR is defined by
+    #
+    #   acmr(β, p) = 1/logninv(p, 0, β)
+    #
+    # Doing some substitution of terms and simplification:
+    #
+    #   acmr(β, p) = 1/logninv(p, 0, β)
+    #              = 1/exp(β * log(exp(-√2 * erfcinv(2*p))))
+    #              = exp(-β * (-√2 * erfcinv(2*p)))
+    #              = exp(√2 * β * erfcinv(2*p))
     #
     # ref: https://www.mathworks.com/help/stats/logninv.html
 
-    # logninv(p, 0, 1) = exp(-√2 * erfcinv(2*p))
-    logninv_p01: np.ndarray = np.exp(-math.sqrt(2) * erfcinv(2 * collapse_prob))
-    # logninv(p, μ, σ) = exp(μ + σ * log(logninv(p, 0, 1)))
-    logninv = np.exp(beta_total * np.log(logninv_p01))
-
-    acmr = 1.0 / logninv
+    acmr = np.exp(math.sqrt(2) * beta_total * erfcinv(2 * collapse_prob))
     # Return an actual scalar if scalar
     return acmr[()] if acmr.shape == () else acmr
 
