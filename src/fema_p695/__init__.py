@@ -30,7 +30,7 @@ __all__ = [
 # Collapse margin ratio
 #------------------------------------------------------------------------
 def acmrxx(beta_total: ArrayLike,
-           collapse_prob: ArrayLike) -> Union[float, np.ndarray]:
+           collapse_prob: ArrayLike) -> Union[np.floating, np.ndarray]:
     """Compute the acceptable value of the adjusted collapse margin ratio (ACMR).
 
     Parameters
@@ -65,8 +65,8 @@ def acmrxx(beta_total: ArrayLike,
     logninv = np.exp(beta_total * np.log(logninv_p01))
 
     acmr = 1.0 / logninv
-    # Return a plain float if scalar
-    return acmr.item() if acmr.shape == () else acmr
+    # Return an actual scalar if scalar
+    return acmr[()] if acmr.shape == () else acmr
 
 
 # Uncertainty values for each rating
