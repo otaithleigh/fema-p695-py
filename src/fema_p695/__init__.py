@@ -40,13 +40,32 @@ def acmrxx(beta_total: ArrayLike,
     collapse_prob : array_like
         Collapse probability being checked (e.g. 0.20 for ACMR20)
 
-    Example
+    Returns
     -------
+    acmrxx : float, ndarray
+        Calculated ACMRXX.
+
+    Examples
+    --------
     Evaluate ACMR20:
     >>> from fema_p695 import acmrxx, beta_total
     >>> beta = beta_total('B', 'B', 'C')
     >>> acmrxx(beta, 0.2)
     1.6569403518893997
+
+    Broadcasting:
+    >>> acmrxx([0.2, 0.5], 0.2)
+    array([1.18332024, 1.52319578])
+    >>> acmrxx([0.2, 0.5], [0.1, 0.2])
+    array([1.29215364, 1.52319578])
+    >>> acmrxx([0.2, 0.5], [[0.1], [0.2]])
+    array([[1.29215364, 1.89795271],
+           [1.18332024, 1.52319578]])
+
+    Notes
+    -----
+    If `beta_total` and `collapse_prob` are both arrays, they must be
+    broadcastable together.
 
     Ref: FEMA P695 Section 7.4
     """
