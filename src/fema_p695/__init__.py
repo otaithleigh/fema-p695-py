@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import importlib.resources
+import math
 import warnings
+from typing import Union
 
 import asce7_16
 import numpy as np
-from scipy.stats import lognorm
-from scipy.optimize import fsolve
+from scipy.special import erfcinv
+from numpy.typing import ArrayLike
 
 __version__ = importlib.resources.read_text(__name__, '__version__')
 
@@ -27,29 +29,44 @@ __all__ = [
 #------------------------------------------------------------------------
 # Collapse margin ratio
 #------------------------------------------------------------------------
-def acmrxx(beta_total, collapse_prob, xin=0.622):
+def acmrxx(beta_total: ArrayLike,
+           collapse_prob: ArrayLike) -> Union[float, np.ndarray]:
     """Compute the acceptable value of the adjusted collapse margin ratio (ACMR).
 
     Parameters
     ----------
-    beta_total:
+    beta_total : array_like
         Total uncertainty present in the system
-    collapse_prob:
+    collapse_prob : array_like
         Collapse probability being checked (e.g. 0.20 for ACMR20)
-    xin = 0.622:
-        Starting value for the nonlinear solution. Tweak this if there are
-        convergence issues.
+
+    Example
+    -------
+    Evaluate ACMR20:
+    >>> from fema_p695 import acmrxx, beta_total
+    >>> beta = beta_total('B', 'B', 'C')
+    >>> acmrxx(beta, 0.2)
+    1.6569403518893997
 
     Ref: FEMA P695 Section 7.4
     """
+    beta_total = np.asarray(beta_total)
+    collapse_prob = np.asarray(collapse_prob)
 
-    # Solve lognorm.cdf as a substitute for MATLAB's logninv function
-    def f(x):
-        return lognorm.cdf(x, beta_total) - collapse_prob
+    # Original MATLAB code uses 1/logninv to calculate ACMR. SciPy
+    # doesn't have a logninv function, but we can reimplement it
+    # using erfcinv.
+    #
+    # ref: https://www.mathworks.com/help/stats/logninv.html
 
-    X = fsolve(f, xin)
+    # logninv(p, 0, 1) = exp(-√2 * erfcinv(2*p))
+    logninv_p01: np.ndarray = np.exp(-math.sqrt(2) * erfcinv(2 * collapse_prob))
+    # logninv(p, μ, σ) = exp(μ + σ * log(logninv(p, 0, 1)))
+    logninv = np.exp(beta_total * np.log(logninv_p01))
 
-    return 1 / X[0]
+    acmr = 1.0 / logninv
+    # Return a plain float if scalar
+    return acmr.item() if acmr.shape == () else acmr
 
 
 # Uncertainty values for each rating
