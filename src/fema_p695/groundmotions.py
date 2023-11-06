@@ -49,9 +49,11 @@ def load_ground_motions(record_set):
     if record_set == 'nearfield':
         pulse = load_ground_motions('nearfield_pulse')
         nopulse = load_ground_motions('nearfield_no_pulse')
-        return GroundMotionData(pd.concat([pulse[0], nopulse[0]]),
-                                pd.concat([pulse[1], nopulse[1]]),
-                                xr.merge([pulse[2], nopulse[2]]))
+        return GroundMotionData(
+            pd.concat([pulse[0], nopulse[0]]),
+            pd.concat([pulse[1], nopulse[1]]),
+            xr.merge([pulse[2], nopulse[2]]),
+        )
 
     with importlib.resources.path(__package__, record_set + '.hdf5') as p:
         records, ground_motions, spectra = _from_hdf5(p)
@@ -125,12 +127,12 @@ def _from_hdf5(filename) -> t.Tuple[pd.DataFrame, pd.DataFrame, xr.Dataset]:
         for recID, compID in groundmotions.index:
             group = h5['_timeseries'][str(recID)][compID]
             timeseries.loc[(recID, compID), 'Time'] = group['Time'][()]
-            timeseries.loc[
-                (recID, compID),
-                'RecordedAcceleration'] = group['RecordedAcceleration'][()]
-            timeseries.loc[
-                (recID, compID),
-                'NormalizedAcceleration'] = group['NormalizedAcceleration'][()]
+            timeseries.loc[(recID, compID), 'RecordedAcceleration'] = group[
+                'RecordedAcceleration'
+            ][()]
+            timeseries.loc[(recID, compID), 'NormalizedAcceleration'] = group[
+                'NormalizedAcceleration'
+            ][()]
 
     groundmotions = pd.concat([groundmotions, timeseries], axis='columns')
 

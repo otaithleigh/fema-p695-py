@@ -26,11 +26,12 @@ __all__ = [
 ]
 
 
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Collapse margin ratio
-#------------------------------------------------------------------------
-def acmrxx(beta_total: ArrayLike,
-           collapse_prob: ArrayLike) -> Union[np.floating, np.ndarray]:
+# ------------------------------------------------------------------------
+def acmrxx(
+    beta_total: ArrayLike, collapse_prob: ArrayLike
+) -> Union[np.floating, np.ndarray]:
     """Compute the acceptable value of the adjusted collapse margin ratio (ACMR).
 
     Parameters
@@ -105,10 +106,9 @@ _rating_values = {
 }
 
 
-def beta_total(rating_DR: str,
-               rating_TD: str,
-               rating_MDL: str,
-               mu_T: float = 3.0) -> float:
+def beta_total(
+    rating_DR: str, rating_TD: str, rating_MDL: str, mu_T: float = 3.0
+) -> float:
     """Compute the total uncertainty present in the system.
 
     Parameters
@@ -133,58 +133,58 @@ def beta_total(rating_DR: str,
     return round(beta * 40) / 40
 
 
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Mapped hazards
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 _mapped_value_dict = {
-    "dmax": {
-        "ss": 1.5,
+    'dmax': {
+        'ss': 1.5,
         # Actually 0.60 but "should be taken as less than 0.60" *eyeroll*
-        "s1": 0.59999999999,
-        "fa": 1.0,
-        "fv": 1.50,
-        "sms": 1.50,
-        "sm1": 0.90,
-        "sds": 1.0,
-        "sd1": 0.60,
-        "ts": 0.60,
+        's1': 0.59999999999,
+        'fa': 1.0,
+        'fv': 1.50,
+        'sms': 1.50,
+        'sm1': 0.90,
+        'sds': 1.0,
+        'sd1': 0.60,
+        'ts': 0.60,
     },
-    "dmin": {
-        "ss": 0.55,
-        "s1": 0.132,
-        "fa": 1.36,
-        "fv": 2.28,
-        "sms": 0.75,
-        "sm1": 0.30,
-        "sds": 0.50,
-        "sd1": 0.20,
-        "ts": 0.40,
+    'dmin': {
+        'ss': 0.55,
+        's1': 0.132,
+        'fa': 1.36,
+        'fv': 2.28,
+        'sms': 0.75,
+        'sm1': 0.30,
+        'sds': 0.50,
+        'sd1': 0.20,
+        'ts': 0.40,
     },
-    "cmin": {
-        "ss": 0.33,
-        "s1": 0.083,
-        "fa": 1.53,
-        "fv": 2.4,
-        "sms": 0.50,
-        "sm1": 0.20,
-        "sds": 0.33,
-        "sd1": 0.133,
-        "ts": 0.40,
+    'cmin': {
+        'ss': 0.33,
+        's1': 0.083,
+        'fa': 1.53,
+        'fv': 2.4,
+        'sms': 0.50,
+        'sm1': 0.20,
+        'sds': 0.33,
+        'sd1': 0.133,
+        'ts': 0.40,
     },
-    "bmin": {
-        "ss": 0.156,
-        "s1": 0.042,
-        "fa": 1.6,
-        "fv": 2.4,
-        "sms": 0.25,
-        "sm1": 0.10,
-        "sds": 0.167,
-        "sd1": 0.067,
-        "ts": 0.40,
-    }
+    'bmin': {
+        'ss': 0.156,
+        's1': 0.042,
+        'fa': 1.6,
+        'fv': 2.4,
+        'sms': 0.25,
+        'sm1': 0.10,
+        'sds': 0.167,
+        'sd1': 0.067,
+        'ts': 0.40,
+    },
 }
-_mapped_value_dict["cmax"] = _mapped_value_dict["dmin"]
-_mapped_value_dict["bmax"] = _mapped_value_dict["cmin"]
+_mapped_value_dict['cmax'] = _mapped_value_dict['dmin']
+_mapped_value_dict['bmax'] = _mapped_value_dict['cmin']
 
 
 def mapped_value(value: str, sdc: str):
@@ -200,10 +200,11 @@ def mapped_value(value: str, sdc: str):
     return _mapped_value_dict[sdc.lower()][value.lower()]
 
 
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Ground motion scaling
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Table A-3
+# fmt: off
 _T_INTERP = np.array([
     0.25, 0.30, 0.35, 0.40, 0.45, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.4, 1.6,
     1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.5, 4.0, 4.5, 5.0
@@ -222,6 +223,7 @@ _SNRT_INTERP = {
         0.172, 0.132, 0.104, 0.086, 0.072
     ])
 }
+# fmt: on
 
 
 def snrt(T, record_set: str = 'farfield'):
@@ -236,14 +238,15 @@ def snrt(T, record_set: str = 'farfield'):
         Ground motion set (default: 'farfield')
     """
     if T < _T_INTERP[0] or T > _T_INTERP[-1]:
-        raise ValueError(f"Period is out of range: T = {T}")
+        raise ValueError(f'Period is out of range: T = {T}')
 
     try:
         snrt_interp = _SNRT_INTERP[record_set]
     except KeyError as exc:
         valid_sets = set(_SNRT_INTERP.keys())
-        raise ValueError(f'Unrecognized record set {record_set!r}; '
-                         f'must be one of {valid_sets!r}') from exc
+        raise ValueError(
+            f'Unrecognized record set {record_set!r}; ' f'must be one of {valid_sets!r}'
+        ) from exc
 
     return np.interp(T, _T_INTERP, snrt_interp)
 
@@ -282,17 +285,17 @@ def smt(T, sdc):
     sdc : {'dmax', 'dmin', 'cmax', 'cmin', 'bmax', 'bmin'}
         Seismic design category
     """
-    SM1 = mapped_value("SM1", sdc)
-    SMS = mapped_value("SMS", sdc)
+    SM1 = mapped_value('SM1', sdc)
+    SMS = mapped_value('SMS', sdc)
     if T <= SM1 / SMS:
         return SMS
     else:
         return SM1 / T
 
 
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Spectral shape factor
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Figure B-3 | Equation B-1
 def _ε_records_farfield(T) -> np.ndarray:
     T = np.asarray(T)
@@ -340,8 +343,7 @@ def _get_ε_records(record_set):
         ε_records = _ε_records_dispatch[record_set]
     except KeyError as exc:
         record_sets = set(_ε_records_dispatch.keys())
-        raise ValueError(f'record_set {record_set!r} '
-                         f'not in {record_sets!r}') from exc
+        raise ValueError(f'record_set {record_set!r} not in {record_sets!r}') from exc
 
     return ε_records
 
@@ -371,7 +373,7 @@ def ssf(T, μT, sdc, record_set: str = 'farfield'):
         μT,
         [μT <= 8.0],
         [
-            lambda μT: 0.14 * (μT - 1)**0.42,
+            lambda μT: 0.14 * (μT - 1) ** 0.42,
             0.32,
         ],
     )
@@ -397,9 +399,9 @@ def ssf(T, μT, sdc, record_set: str = 'farfield'):
     return np.exp(β1 * (εo - ε_records(T)))
 
 
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 # Structure parameters
-#------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 def fundamental_period(hn, Ct, x, sdc):
     """Calculate the fundamental period of the structure.
 
@@ -456,7 +458,8 @@ def seismic_response_coeff(R, T, sdc, level: str = 'design'):
         warnings.warn(
             'seismic_response_coeff: Given period '
             f'(T = {T} s) is out of FEMA P695 range',
-            stacklevel=2)
+            stacklevel=2,
+        )
 
     Ts = mapped_value('Ts', sdc)
 
