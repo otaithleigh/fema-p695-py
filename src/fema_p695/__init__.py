@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import importlib.resources
+import math
 import warnings
+from typing import Union
 
 import asce7_16
 import numpy as np
-from scipy.stats import lognorm
-from scipy.optimize import fsolve
+from scipy.special import erfcinv
+from numpy.typing import ArrayLike
 
 __version__ = importlib.resources.read_text(__name__, '__version__')
 
@@ -27,29 +29,71 @@ __all__ = [
 #------------------------------------------------------------------------
 # Collapse margin ratio
 #------------------------------------------------------------------------
-def acmrxx(beta_total, collapse_prob, xin=0.622):
+def acmrxx(beta_total: ArrayLike,
+           collapse_prob: ArrayLike) -> Union[np.floating, np.ndarray]:
     """Compute the acceptable value of the adjusted collapse margin ratio (ACMR).
 
     Parameters
     ----------
-    beta_total:
+    beta_total : array_like
         Total uncertainty present in the system
-    collapse_prob:
+    collapse_prob : array_like
         Collapse probability being checked (e.g. 0.20 for ACMR20)
-    xin = 0.622:
-        Starting value for the nonlinear solution. Tweak this if there are
-        convergence issues.
+
+    Returns
+    -------
+    acmrxx : float, ndarray
+        Calculated ACMRXX.
+
+    Examples
+    --------
+    Evaluate ACMR20:
+    >>> from fema_p695 import acmrxx, beta_total
+    >>> beta = beta_total('B', 'B', 'C')
+    >>> acmrxx(beta, 0.2)
+    1.6569403518893997
+
+    Broadcasting:
+    >>> acmrxx([0.2, 0.5], 0.2)
+    array([1.18332024, 1.52319578])
+    >>> acmrxx([0.2, 0.5], [0.1, 0.2])
+    array([1.29215364, 1.52319578])
+    >>> acmrxx([0.2, 0.5], [[0.1], [0.2]])
+    array([[1.29215364, 1.89795271],
+           [1.18332024, 1.52319578]])
+
+    Notes
+    -----
+    If `beta_total` and `collapse_prob` are both arrays, they must be
+    broadcastable together.
 
     Ref: FEMA P695 Section 7.4
     """
+    if not np.isscalar(beta_total):
+        beta_total = np.asarray(beta_total)
+    if not np.isscalar(collapse_prob):
+        collapse_prob = np.asarray(collapse_prob)
 
-    # Solve lognorm.cdf as a substitute for MATLAB's logninv function
-    def f(x):
-        return lognorm.cdf(x, beta_total) - collapse_prob
-
-    X = fsolve(f, xin)
-
-    return 1 / X[0]
+    # Original MATLAB code uses 1/logninv to calculate ACMR. SciPy
+    # doesn't have a logninv function, but we can reimplement it
+    # using erfcinv. logninv is defined by the following two functions:
+    #
+    #   logninv(p, 0, 1) = exp(-√2 * erfcinv(2*p))
+    #   logninv(p, μ, σ) = exp(μ + σ * log(logninv(p, 0, 1)))
+    #
+    # ACMR is defined by
+    #
+    #   acmr(β, p) = 1/logninv(p, 0, β)
+    #
+    # Doing some substitution of terms and simplification:
+    #
+    #   acmr(β, p) = 1/logninv(p, 0, β)
+    #              = 1/exp(β * log(exp(-√2 * erfcinv(2*p))))
+    #              = exp(-β * (-√2 * erfcinv(2*p)))
+    #              = exp(√2 * β * erfcinv(2*p))
+    #
+    # ref: https://www.mathworks.com/help/stats/logninv.html
+    return np.exp(math.sqrt(2) * beta_total * erfcinv(2 * collapse_prob))
 
 
 # Uncertainty values for each rating
@@ -149,7 +193,7 @@ def mapped_value(value: str, sdc: str):
     Parameters
     ----------
     value : {'SS', 'S1', 'Fa', 'Fv', 'SMS', 'SM1', 'SDS', 'SD1', 'Ts'}
-        Mapped parameter to retrieve 
+        Mapped parameter to retrieve
     sdc : {'dmax', 'dmin', 'cmax', 'cmin', 'bmax', 'bmin'}
         Seismic design category
     """

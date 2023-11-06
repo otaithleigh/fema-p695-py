@@ -10,6 +10,9 @@ Changelog
 
 ### Changed
 
+- `acmrxx` now uses a reimplementation of the MATLAB function `logninv`
+  internally instead of `fsolve`. The optional argument `xin` has been removed.
+  (PR #1)
 - Warnings raised by `seismic_response_coeff` now appear as coming from the
   calling function.
 
