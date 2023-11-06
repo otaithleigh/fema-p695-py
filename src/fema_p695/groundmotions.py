@@ -16,7 +16,7 @@ import typing as t
 from functools import lru_cache
 
 import h5py
-import hdf5plugin  # Not used directly, but need to import to load libraries
+import hdf5plugin  # noqa: F401 Not used directly, but need to import to load libraries
 import pandas as pd
 import xarray as xr
 from xarrayhdf import hdf_to_dataframe, hdf_to_dataset

@@ -4,3 +4,34 @@ requires = [
     "wheel",
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+select = [
+    'B',
+    'C4',
+    'E',
+    'F',
+    'NPY',
+    'PIE',
+    'PL',
+    'RUF',
+    'TRY',
+    'W',
+]
+ignore = [
+    'E501',  # Line length -- if Black didn't catch it, I don't wanna hear about it
+    'E731',  # I don't like this rule, and I don't do it often
+    'E741',  # Ambiguous variable name -- they're not ambiguous in domain context
+    'PLR0911',  # annoying heuristic
+    'PLR0912',  # annoying heuristic
+    'PLR0913',  # annoying heuristic
+    'PLR0915',  # annoying heuristic
+    'PLR2004',  # The magic values come from the spec
+    'PLW2901',  # This is intentional shadowing every time I've done it
+    'RUF003',  # Overly broad ambiguous character rules, includes Greek letters
+    'TRY003',  # Messages in exception
+    'TRY200',  # Duplicate with B904
+]
+
+[tool.ruff.flake8-comprehensions]
+allow-dict-calls-with-keyword-arguments = true
