@@ -1,10 +1,49 @@
 [build-system]
 requires = [
-    "setuptools >= 40.9.0",
-    "wheel",
+    "setuptools>=64",
+    "setuptools_scm>=8",
 ]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools_scm]
+version_file = "src/fema_p695/_version.py"
+
+# ------------------------------------------------------------------------------
+# Metadata
+# ------------------------------------------------------------------------------
+[project]
+name = "fema-p695"
+authors = [
+    { name = "Peter Talley", email = "peterctalley@gmail.com" }
+]
+description = "FEMA P695 utilities and ground motions."
+readme = "README.rst"
+license.text = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+
+requires-python = ">=3.8"
+dependencies = [
+    "asce7-16",
+    "h5py",
+    "hdf5plugin",
+    "numpy>=1.20",
+    "pandas",
+    "scipy",
+    "tables",
+    "xarray",
+    "xarray-hdf",
+]
+
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/otaithleigh/fema-p695-py"
+
+# ------------------------------------------------------------------------------
+# Linting & formatting
+# ------------------------------------------------------------------------------
 [tool.ruff]
 select = [
     'B',

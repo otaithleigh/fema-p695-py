@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import importlib.resources
 import math
 import warnings
 from typing import Union
@@ -10,7 +9,7 @@ import numpy as np
 from scipy.special import erfcinv
 from numpy.typing import ArrayLike
 
-__version__ = importlib.resources.read_text(__name__, '__version__')
+from ._version import __version__, __version_tuple__  # noqa: F401
 
 __all__ = [
     'acmrxx',
