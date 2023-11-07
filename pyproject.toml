@@ -45,6 +45,7 @@ Homepage = "https://github.com/otaithleigh/fema-p695-py"
 # Linting & formatting
 # ------------------------------------------------------------------------------
 [tool.ruff]
+line-length = 80
 select = [
     'B',
     'C4',
